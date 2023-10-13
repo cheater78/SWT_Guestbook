@@ -116,8 +116,8 @@ class GuestbookController {
 	 * @param entry an {@link Optional} with the {@link GuestbookEntry} to delete
 	 * @return a redirect string
 	 */
-	@PreAuthorize("hasRole('ADMIN')")
-	@DeleteMapping(path = "/guestbook/{entry}")
+	//@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping(path = "/guestbook/remove{entry}")
 	String removeEntry(@PathVariable Optional<GuestbookEntry> entry) {
 
 		return entry.map(it -> {

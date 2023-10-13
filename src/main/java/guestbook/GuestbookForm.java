@@ -30,7 +30,9 @@ import jakarta.validation.constraints.NotBlank;
 class GuestbookForm {
 
 	private final @NotBlank String name;
+	private final @NotBlank String email;
 	private final @NotBlank String text;
+
 
 	/**
 	 * Creates a new {@link GuestbookForm} with the given name and text. Spring Framework will use this constructor to
@@ -42,9 +44,10 @@ class GuestbookForm {
 	 * @param name the value to bind to {@code name}
 	 * @param text the value to bind to {@code text}
 	 */
-	public GuestbookForm(String name, String text) {
+	public GuestbookForm(String name, String email, String text) {
 
 		this.name = name;
+		this.email = email;
 		this.text = text;
 	}
 
@@ -58,6 +61,8 @@ class GuestbookForm {
 	public String getName() {
 		return name;
 	}
+
+	public String getEmail() {return email; }
 
 	/**
 	 * Returns the value bound to the {@code text} attribute of the request. Needs to be public so that Spring will
@@ -77,6 +82,6 @@ class GuestbookForm {
 	 * @throws IllegalArgumentException if you call this on an instance without the name and text actually set.
 	 */
 	GuestbookEntry toNewEntry() {
-		return new GuestbookEntry(getName(), getText());
+		return new GuestbookEntry(getName(), getEmail(), getText());
 	}
 }
