@@ -80,7 +80,7 @@ class GuestbookController {
 	String guestBook(Model model, @ModelAttribute(binding = false) GuestbookForm form) {
 
 		model.addAttribute("entries", guestbook.findAll());
-		model.addAttribute("form", form);
+		model.addAttribute("gbEntryForm", form);
 
 		return "guestbook";
 	}
@@ -128,7 +128,27 @@ class GuestbookController {
 		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 	}
 
-	// Request methods answering HTMX requests
+	@DeleteMapping(path = "/guestbook/edit{entry}")
+	String editEntry(@PathVariable Optional<GuestbookEntry> entry) {
+
+		return entry.map(it -> {
+
+
+			//return "redirect:/guestbook";
+
+		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	}
+
+	@DeleteMapping(path = "/guestbook/editSubmit{entry}")
+	String editSubmitEntry(@PathVariable Optional<GuestbookEntry> entry) {
+
+		return entry.map(it -> {
+
+			guestbook.delete(it);
+			return "redirect:/guestbook";
+
+		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	}
 
 	/**
 	 * Handles AJAX requests to create a new {@link GuestbookEntry}. Instead of rendering a complete page, this view only

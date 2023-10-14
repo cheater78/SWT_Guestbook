@@ -16,11 +16,14 @@
 package guestbook;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.util.Assert;
 
 /**
@@ -34,8 +37,11 @@ import org.springframework.util.Assert;
 class GuestbookEntry {
 
 	private @Id @GeneratedValue Long id;
-	private final String name, email, text;
-	private final LocalDateTime date;
+	private @NotBlank String name, email, text;
+	private LocalDateTime date;
+	private boolean editable;
+	private boolean show;
+	private List<GuestbookEntry> comments;
 
 	/**
 	 * Creates a new {@link GuestbookEntry} for the given name and text.
@@ -43,7 +49,7 @@ class GuestbookEntry {
 	 * @param name must not be {@literal null} or empty
 	 * @param text must not be {@literal null} or empty
 	 */
-	public GuestbookEntry(String name, String email, String text) {
+	public GuestbookEntry(String name, String email, String text, boolean editable, boolean show) {
 
 		Assert.hasText(name, "Name must not be null or empty!");
 		Assert.hasText(text, "Text must not be null or empty!");
@@ -51,7 +57,11 @@ class GuestbookEntry {
 		this.name = name;
 		this.email = email;
 		this.text = text;
+		this.editable = editable;
 		this.date = LocalDateTime.now();
+		this.show = show;
+
+		this.comments = new ArrayList<>();
 	}
 
 	@SuppressWarnings("unused")
@@ -60,6 +70,11 @@ class GuestbookEntry {
 		this.email = null;
 		this.text = null;
 		this.date = null;
+
+		this.show = false;
+		this.editable = true;
+
+		this.comments = new ArrayList<>();
 	}
 
 	public String getName() {
@@ -78,5 +93,19 @@ class GuestbookEntry {
 
 	public String getText() {
 		return text;
+	}
+
+	public void setVisible(boolean show) {
+		this.show = show;
+	}
+
+	public void addComment(GuestbookEntry comment){
+		if(comment == null) throw new NullPointerException();
+		this.comments.add(comment);
+	}
+
+	public boolean removeComment(GuestbookEntry comment){
+		if(comment == null) throw new NullPointerException();
+		return this.comments.remove(comment);
 	}
 }
