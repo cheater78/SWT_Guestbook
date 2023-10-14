@@ -97,7 +97,7 @@ class GuestbookController {
 	 */
 	@PostMapping(path = "/guestbook")
 	String addEntry(@Valid @ModelAttribute("form") GuestbookForm form, Errors errors, Model model) {
-
+		System.out.println("submit");
 		if (errors.hasErrors()) {
 			return guestBook(model, form);
 		}
@@ -116,6 +116,7 @@ class GuestbookController {
 	 * @param entry an {@link Optional} with the {@link GuestbookEntry} to delete
 	 * @return a redirect string
 	 */
+	/*
 	//@PreAuthorize("hasRole('ADMIN')")
 	@DeleteMapping(path = "/guestbook/remove{entry}")
 	String removeEntry(@PathVariable Optional<GuestbookEntry> entry) {
@@ -127,24 +128,16 @@ class GuestbookController {
 
 		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 	}
-
-	@DeleteMapping(path = "/guestbook/edit{entry}")
-	String editEntry(@PathVariable Optional<GuestbookEntry> entry) {
-
-		return entry.map(it -> {
-
-
-			//return "redirect:/guestbook";
-
-		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-	}
-
-	@DeleteMapping(path = "/guestbook/editSubmit{entry}")
+	*/
+	@HxRequest
+	@PostMapping(path = "/guestbook/edit{entry}")
 	String editSubmitEntry(@PathVariable Optional<GuestbookEntry> entry) {
 
+		System.out.println("Editing Entry: " + entry);
+
 		return entry.map(it -> {
 
-			guestbook.delete(it);
+			guestbook.findById(entry.get().getId()).get().replace(entry.get());
 			return "redirect:/guestbook";
 
 		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -160,14 +153,18 @@ class GuestbookController {
 	 * @param form the form submitted by the user
 	 * @param model the model that's used to render the view
 	 * @return a reference to a Thymeleaf template fragment
-	 * @see #addEntry(String, String)
+	 * @see \#addEntry(String, String)
 	 */
 	@HxRequest
 	@PostMapping(path = "/guestbook")
 	HtmxResponse addEntry(@Valid GuestbookForm form, Model model) {
 
-		model.addAttribute("entry", guestbook.save(form.toNewEntry()));
+		GuestbookEntry entry = form.toNewEntry();
+
+		model.addAttribute("entry", guestbook.save(entry));
 		model.addAttribute("index", guestbook.count());
+
+		System.out.println("Added Entry: " + entry);
 
 		return new HtmxResponse()
 				.addTemplate("guestbook :: entry")
@@ -183,8 +180,8 @@ class GuestbookController {
 	 * @throws ResponseStatusException
 	 */
 	@HxRequest
-	@PreAuthorize("hasRole('ADMIN')")
-	@DeleteMapping(path = "/guestbook/{entry}")
+	//@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping(path = "/guestbook/remove{entry}")
 	HtmxResponse removeEntryHtmx(@PathVariable Optional<GuestbookEntry> entry, Model model) {
 
 		return entry.map(it -> {

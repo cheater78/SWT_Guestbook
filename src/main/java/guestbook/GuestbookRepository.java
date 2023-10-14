@@ -19,6 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.util.Streamable;
 
+import java.util.Optional;
+
 /**
  * A repository to manage {@link GuestbookEntry} instances. The methods are dynamically implemented by Spring Data JPA.
  *
@@ -35,5 +37,6 @@ interface GuestbookRepository extends CrudRepository<GuestbookEntry, Long> {
 	 * @param sort the given sorting criteria
 	 * @return all {@link GuestbookEntry}s matching the query
 	 */
+
 	Streamable<GuestbookEntry> findByName(String name, Sort sort);
 }

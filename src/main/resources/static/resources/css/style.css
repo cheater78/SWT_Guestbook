@@ -3,6 +3,10 @@ div#entries, #form {
 	width: 50%;
 }
 
+.round {
+	border-radius: .4em;
+}
+
 .card {
 	margin-bottom: 2em;
 }
@@ -15,6 +19,95 @@ div#entries, #form {
 	font-size: 0.8em;
 }
 
+.grid2 {
+	display: grid;
+	grid-template-columns: 50% 50%;
+	position: relative;
+	top: 0;
+	z-index: 1;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	justify-content: space-between;
+}
+
+.grid3s {
+	display: grid;
+	grid-template-columns: 33% 33% 33%;
+	position: sticky;
+	top: 0;
+	z-index: 999;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	justify-content: space-between;
+}
+
+.grid-item {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	text-decoration: none;
+}
+
+*{
+	margin: 0;
+	padding: 0;
+}
+.rate {
+	float: left;
+	height: 46px;
+	padding: 0 10px;
+}
+.rate:not(:checked) > input {
+	position:absolute;
+	top:-9999px;
+}
+.rate:not(:checked) > label {
+	float:right;
+	width:1em;
+	overflow:hidden;
+	white-space:nowrap;
+	cursor:pointer;
+	font-size:30px;
+	color:#ccc;
+}
+.rate:not(:checked) > label:before {
+	content: '★ ';
+}
+.rate > input:checked ~ label {
+	color: #ffc700;
+}
+.rate:not(:checked) > label:hover,
+.rate:not(:checked) > label:hover ~ label {
+	color: #deb217;
+}
+.rate > input:checked + label:hover,
+.rate > input:checked + label:hover ~ label,
+.rate > input:checked ~ label:hover,
+.rate > input:checked ~ label:hover ~ label,
+.rate > label:hover ~ input:checked ~ label {
+	color: #c59b08;
+}
+
+.arrow {
+	border: solid black;
+	border-width: 0 3px 3px 0;
+	display: inline-block;
+	padding: 3px;
+}
+
+.up {
+	transform: rotate(-135deg);
+	-webkit-transform: rotate(-135deg);
+}
+
+.down {
+	transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+}
+
 blockquote {
 	margin: 0;
 }
@@ -22,3 +115,4 @@ blockquote {
 form#form {
 	padding: 0 1.25em;
 }
+

@@ -59,14 +59,12 @@ public class Application {
 
 		return args -> {
 
-			Stream.of( //
-					new GuestbookEntry("H4xx0r", "null", "first!!!"), //
-					new GuestbookEntry("Arni", "null", "Hasta la vista, baby"), //
-					new GuestbookEntry("Duke Nukem", "null",
-							"It's time to kick ass and chew bubble gum. And I'm all out of gum."), //
-					new GuestbookEntry("Gump1337", "null",
-							"Mama always said life was like a box of chocolates. You never know what you're gonna get.")) //
-					.forEach(guestbook::save);
+			Stream.of(
+				new GuestbookEntry("H4xx0r", "email@email.com", "first!!!", true, true),
+				new GuestbookEntry("Arni", "email@email.com", "Hasta la vista, baby", true, true),
+				new GuestbookEntry("Duke Nukem", "email@email.com", "It's time to kick ass and chew bubble gum. And I'm all out of gum.", true, true),
+				new GuestbookEntry("Gump1337", "email@email.com", "Mama always said life was like a box of chocolates. You never know what you're gonna get.", true, true)
+			).forEach(guestbook::save);
 		};
 	}
 

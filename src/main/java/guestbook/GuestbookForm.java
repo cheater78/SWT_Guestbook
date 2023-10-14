@@ -16,6 +16,10 @@
 package guestbook;
 
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.util.Assert;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Type to bind request payloads and make them available in the controller. In contrast to {@link GuestbookEntry} it is
@@ -29,9 +33,14 @@ import jakarta.validation.constraints.NotBlank;
  */
 class GuestbookForm {
 
-	private final @NotBlank String name;
-	private final @NotBlank String email;
-	private final @NotBlank String text;
+	private Optional<Long> parent;
+	private @NotBlank String name;
+	private @NotBlank String email;
+	private @NotBlank String text;
+	private @NotBlank String color;
+	private LocalDateTime date;
+	private Boolean editable;
+	private Boolean show;
 
 
 	/**
@@ -39,49 +48,52 @@ class GuestbookForm {
 	 * bind the values provided in the web form described in {@code src/main/resources/templates/guestbook.html}, in
 	 * particular the {@code name} and {@code text} fields as they correspond to the parameter names of the constructor.
 	 * The constructor needs to be public so that Spring will actually consider it for form data binding until
-	 * {@link https://github.com/spring-projects/spring-framework/issues/22600} is resolved.
+	 * {@link \https://github.com/spring-projects/spring-framework/issues/22600} is resolved.
 	 *
 	 * @param name the value to bind to {@code name}
 	 * @param text the value to bind to {@code text}
 	 */
-	public GuestbookForm(String name, String email, String text) {
-
+	public GuestbookForm(String name, String email, String text, Boolean editable, Boolean show, Optional<Long> parentID) {
 		this.name = name;
 		this.email = email;
 		this.text = text;
+		this.date = LocalDateTime.now();
+
+		if(editable == null) editable = true;
+		if(show == null) show = true;
+
+		this.editable = editable;
+		this.show = show;
+
+		this.parent = parentID;
 	}
 
-	/**
-	 * Returns the value bound to the {@code name} attribute of the request. Needs to be public so that Spring will
-	 * actually consider it for form data binding until
-	 * {@link https://github.com/spring-projects/spring-framework/issues/22600} is resolved.
-	 *
-	 * @return the value bound to {@code name}
-	 */
-	public String getName() {
-		return name;
-	}
+	public Optional<Long> getParentID() { return parent; }
 
-	public String getEmail() {return email; }
+	public String getName() { return name; }
+	public void setName(String name) { this.name = name; }
 
-	/**
-	 * Returns the value bound to the {@code text} attribute of the request. Needs to be public so that Spring will
-	 * actually consider it for form data binding until
-	 * {@link https://github.com/spring-projects/spring-framework/issues/22600} is resolved.
-	 *
-	 * @return the value bound to {@code text}
-	 */
-	public String getText() {
-		return text;
-	}
+	public String getEmail(){ return email; }
+	public void setEmail(String email) { this.email = email; }
 
-	/**
-	 * Returns a new {@link GuestbookEntry} using the data submitted in the request.
-	 *
-	 * @return the newly created {@link GuestbookEntry}
-	 * @throws IllegalArgumentException if you call this on an instance without the name and text actually set.
-	 */
-	GuestbookEntry toNewEntry() {
-		return new GuestbookEntry(getName(), getEmail(), getText());
-	}
+
+
+	public LocalDateTime getDate() { return date; }
+	public void setDate(LocalDateTime date) { this.date = date; }
+
+	public String getText() { return text; }
+	public void setText(String text) { this.text = text; }
+
+	public String getColor() { return color; }
+	public void setColor(String color) { this.color = color; }
+
+	public Boolean getEditable() { return editable; }
+	public void setEditable(Boolean editable) { if(editable == null) editable = true; this.editable = editable; }
+
+	public Boolean getShow() { return show; }
+	public void setShow(Boolean show) { if(show == null) show = true; this.show = show; }
+
+
+
+	GuestbookEntry toNewEntry() { return new GuestbookEntry(name, email, text, color, editable, show, parent.orElseGet(() -> (long) -1)); }
 }

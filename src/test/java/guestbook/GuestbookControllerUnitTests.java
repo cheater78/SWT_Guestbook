@@ -26,6 +26,8 @@ import org.springframework.data.util.Streamable;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
+import java.util.Optional;
+
 /**
  * Unit tests for {@link GuestbookController}.
  *
@@ -39,13 +41,13 @@ class GuestbookControllerUnitTests {
 	@Test
 	void populatesModelForGuestbook() {
 
-		GuestbookEntry entry = new GuestbookEntry("Yoda", "null", "May the 4th b with you!");
+		GuestbookEntry entry = new GuestbookEntry("Yoda", "null", "May the 4th b with you!", true, true);
 		doReturn(Streamable.of(entry)).when(guestbook).findAll();
 
 		Model model = new ExtendedModelMap();
 
 		GuestbookController controller = new GuestbookController(guestbook);
-		String viewName = controller.guestBook(model, new GuestbookForm(null, null, null));
+		String viewName = controller.guestBook(model, new GuestbookForm(null, null, null, true, true, Optional.empty()));
 
 		assertThat(viewName).isEqualTo("guestbook");
 		assertThat(model.asMap().get("entries")).isInstanceOf(Iterable.class);

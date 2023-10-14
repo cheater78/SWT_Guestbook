@@ -42,7 +42,7 @@ class GuestbookRepositoryIntegrationTests {
 	@Test
 	void persistsGuestbookEntry() {
 
-		GuestbookEntry entry = repository.save(new GuestbookEntry("Yoda", "null", "May the force be with you!"));
+		GuestbookEntry entry = repository.save(new GuestbookEntry("H4xx0r", "email@email.com", "first!!!", true, true));
 
 		assertThat(repository.findAll()).contains(entry);
 	}
@@ -50,7 +50,7 @@ class GuestbookRepositoryIntegrationTests {
 	@Test // #34
 	void findsGuestbookEntryByAuthorName() {
 
-		GuestbookEntry entry = repository.save(new GuestbookEntry("Yoda", "null", "May the force be with you!"));
+		GuestbookEntry entry = repository.save(new GuestbookEntry("Yoda", "email@email.com", "first!!!", true, true));
 
 		assertThat(repository.findByName("Yoda", Sort.by("date"))).contains(entry);
 	}

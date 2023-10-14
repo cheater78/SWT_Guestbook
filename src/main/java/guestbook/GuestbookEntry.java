@@ -18,12 +18,14 @@ package guestbook;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.context.annotation.Bean;
 import org.springframework.util.Assert;
 
 /**
@@ -31,17 +33,24 @@ import org.springframework.util.Assert;
  *
  * @author Paul Henke
  * @author Oliver Drotbohm
- * @see https://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks
+ * @see \https://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks
  */
 @Entity
 class GuestbookEntry {
 
 	private @Id @GeneratedValue Long id;
-	private @NotBlank String name, email, text;
+	private Long parent;
+	private @NotBlank String name;
+	private @NotBlank String email;
+	private @NotBlank String text;
+	private @NotBlank String color;
+
 	private LocalDateTime date;
 	private boolean editable;
 	private boolean show;
-	private List<GuestbookEntry> comments;
+
+
+	//private int rating;
 
 	/**
 	 * Creates a new {@link GuestbookEntry} for the given name and text.
@@ -49,7 +58,7 @@ class GuestbookEntry {
 	 * @param name must not be {@literal null} or empty
 	 * @param text must not be {@literal null} or empty
 	 */
-	public GuestbookEntry(String name, String email, String text, boolean editable, boolean show) {
+	public GuestbookEntry(String name, String email, String text, String color, boolean editable, boolean show, Long parentID) {
 
 		Assert.hasText(name, "Name must not be null or empty!");
 		Assert.hasText(text, "Text must not be null or empty!");
@@ -60,52 +69,96 @@ class GuestbookEntry {
 		this.editable = editable;
 		this.date = LocalDateTime.now();
 		this.show = show;
+		if(color == null || color.isEmpty()) color = "#e0b689";
+		this.color = color;
 
-		this.comments = new ArrayList<>();
+		this.parent = parentID;
 	}
 
-	@SuppressWarnings("unused")
-	private GuestbookEntry() {
+	public GuestbookEntry(String name, String email, String text, boolean editable, boolean show) {
+
+		Assert.hasText(name, "Name must not be null or empty!");
+		Assert.hasText(text, "Text must not be null or empty!");
+
+		this.name = name;
+		this.email = email;
+		this.text = text;
+		this.color = "#e0b689";
+
+		this.date = LocalDateTime.now();
+
+		this.editable = editable;
+		this.show = show;
+
+		this.parent = (long) -1;
+	}
+
+	public GuestbookEntry() {
 		this.name = null;
 		this.email = null;
 		this.text = null;
+		this.color = "#000000";
+
 		this.date = null;
 
 		this.show = false;
 		this.editable = true;
 
-		this.comments = new ArrayList<>();
+		this.parent = (long) -1;
 	}
 
-	public String getName() {
-		return name;
+	public GuestbookEntry copy(){
+		return new GuestbookEntry(name, email, text, color, editable, show, parent);
 	}
+
+	public void replace(GuestbookEntry entry){
+		this.name = entry.getName();
+		this.email = entry.getEmail();
+		this.text = entry.getText();
+		this.date = LocalDateTime.now();
+
+		this.editable = entry.isEditable();
+		this.show = entry.isVisible();
+
+		this.parent = entry.getParentID();
+	}
+
+	public Long getId() { return id; }
+	public Long getParentID() { return parent; }
+
+	public String getName() { return name; }
+	public void setName(String name) { this.name = name; }
 
 	public String getEmail(){ return email; }
+	public void setEmail(String email) { this.email = email; }
 
-	public Long getId() {
-		return id;
-	}
+	public String getColor() { return color; }
+	public void setColor(String color) { this.color = color; }
 
-	public LocalDateTime getDate() {
-		return date;
-	}
+	public LocalDateTime getDate() { return date; }
+	public void setDate(LocalDateTime date) { this.date = date; }
 
-	public String getText() {
-		return text;
-	}
+	public String getText() { return text; }
+	public void setText(String text) { this.text = text; }
 
-	public void setVisible(boolean show) {
-		this.show = show;
-	}
+	public boolean isEditable() { return editable; }
+	public void setEditable(boolean editable) { this.editable = editable; }
 
-	public void addComment(GuestbookEntry comment){
-		if(comment == null) throw new NullPointerException();
-		this.comments.add(comment);
-	}
+	public boolean isVisible() { return show; }
+	public void setVisible(boolean show) { this.show = show; }
 
-	public boolean removeComment(GuestbookEntry comment){
-		if(comment == null) throw new NullPointerException();
-		return this.comments.remove(comment);
+	public String toString(){
+		String out = "  GuestBookEntry:" + "\n    ";
+		out += this.id + "\n    ";
+		out += this.name + "\n    ";
+		out += this.email + "\n    ";
+		out += this.text + "\n    ";
+		out += this.color + "\n    ";
+		out += this.date + "\n    ";
+		out += this.show + "\n    ";
+		out += this.editable + "\n    ";
+		out += this.parent + "\n";
+		out += "\n\n";
+		return out;
 	}
 }
