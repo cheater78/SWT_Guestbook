@@ -19,6 +19,9 @@ import io.github.wimdeblauwe.hsbt.mvc.HtmxResponse;
 import io.github.wimdeblauwe.hsbt.mvc.HxRequest;
 import jakarta.validation.Valid;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,38 @@ import org.springframework.web.server.ResponseStatusException;
 class GuestbookController {
 
 	private final GuestbookRepository guestbook;
+	private Map<Long, Boolean> showComments;
+	private Map<Long, Boolean> editMode;
+
+	public void updateShowComments(){
+		for (GuestbookEntry entry : guestbook.findAll()){
+			if(!showComments.containsKey(entry.getId())){
+				showComments.put(entry.getId(), false);
+			}
+		}
+	}
+
+	public Boolean showCommntsOf(Long id){
+		updateShowComments();
+		if(!showComments.containsKey(id))
+			showComments.put(id, false);
+		return showComments.get(id);
+	}
+
+	public void updateEditMode(){
+		for (GuestbookEntry entry : guestbook.findAll()){
+			if(!editMode.containsKey(entry.getId())){
+				editMode.put(entry.getId(), false);
+			}
+		}
+	}
+
+	public Boolean isEditMode(Long id){
+		updateEditMode();
+		if(!editMode.containsKey(id))
+			editMode.put(id, false);
+		return editMode.get(id);
+	}
 
 	/**
 	 * Creates a new {@link GuestbookController} using the given {@link GuestbookRepository}. Spring will look for a bean
@@ -55,6 +90,12 @@ class GuestbookController {
 
 		Assert.notNull(guestbook, "Guestbook must not be null!");
 		this.guestbook = guestbook;
+		this.showComments = new HashMap<>();
+		updateShowComments();
+
+		this.editMode = new HashMap<>();
+		updateEditMode();
+
 	}
 
 	/**
@@ -82,65 +123,10 @@ class GuestbookController {
 		model.addAttribute("entries", guestbook.findAll());
 		model.addAttribute("gbEntryForm", form);
 
+		model.addAttribute("showComments", showComments);
+		model.addAttribute("editMode", editMode);
+
 		return "guestbook";
-	}
-
-	/**
-	 * Handles requests to create a new {@link GuestbookEntry}. Spring MVC automatically validates and binds the HTML form
-	 * to the {@code form} parameter. Validation or binding errors, if any, are exposed via the {@code
-	 * errors} parameter.
-	 *
-	 * @param form the form submitted by the user
-	 * @param errors an object that stores any form validation or data binding errors
-	 * @param model the model that's used to render the view
-	 * @return a redirect string
-	 */
-	@PostMapping(path = "/guestbook")
-	String addEntry(@Valid @ModelAttribute("form") GuestbookForm form, Errors errors, Model model) {
-		System.out.println("submit");
-		if (errors.hasErrors()) {
-			return guestBook(model, form);
-		}
-
-		guestbook.save(form.toNewEntry());
-
-		return "redirect:/guestbook";
-	}
-
-	/**
-	 * Deletes a {@link GuestbookEntry}. This request can only be performed by authenticated users with admin privileges.
-	 * Also note how the path variable used in the {@link DeleteMapping} annotation is bound to an {@link Optional}
-	 * parameter of the controller method using the {@link PathVariable} annotation. If the entry couldn't be found, that
-	 * {@link Optional} will be empty.
-	 *
-	 * @param entry an {@link Optional} with the {@link GuestbookEntry} to delete
-	 * @return a redirect string
-	 */
-	/*
-	//@PreAuthorize("hasRole('ADMIN')")
-	@DeleteMapping(path = "/guestbook/remove{entry}")
-	String removeEntry(@PathVariable Optional<GuestbookEntry> entry) {
-
-		return entry.map(it -> {
-
-			guestbook.delete(it);
-			return "redirect:/guestbook";
-
-		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-	}
-	*/
-	@HxRequest
-	@PostMapping(path = "/guestbook/edit{entry}")
-	String editSubmitEntry(@PathVariable Optional<GuestbookEntry> entry) {
-
-		System.out.println("Editing Entry: " + entry);
-
-		return entry.map(it -> {
-
-			guestbook.findById(entry.get().getId()).get().replace(entry.get());
-			return "redirect:/guestbook";
-
-		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 	}
 
 	/**
@@ -160,9 +146,16 @@ class GuestbookController {
 	HtmxResponse addEntry(@Valid GuestbookForm form, Model model) {
 
 		GuestbookEntry entry = form.toNewEntry();
+		guestbook.save(entry);
+		if(!showComments.containsKey(entry.getId())) showComments.put(entry.getId(), false);
+		if(!editMode.containsKey(entry.getId())) editMode.put(entry.getId(), false);
 
-		model.addAttribute("entry", guestbook.save(entry));
 		model.addAttribute("index", guestbook.count());
+		model.addAttribute("entry", entry);
+		model.addAttribute("entries", guestbook.findAll());
+		model.addAttribute("gbEntryForm", form);
+		model.addAttribute("showComments", showComments);
+		model.addAttribute("editMode", editMode);
 
 		System.out.println("Added Entry: " + entry);
 
@@ -170,6 +163,53 @@ class GuestbookController {
 				.addTemplate("guestbook :: entry")
 				.addTrigger("eventAdded");
 	}
+
+
+
+	@HxRequest
+	@PostMapping(path = "/guestbook/edit{entry}")
+	String editEntry(@PathVariable Optional<GuestbookEntry> entry, Model model) {
+		System.out.println("Editing " + ((entry.isPresent()) ? entry.get().getId() : -1));
+		return entry.map(it -> {
+
+			System.out.println("Editing Entry: " + entry);
+
+			editMode.put(entry.get().getId(), true);
+
+			model.addAttribute("index", guestbook.count());
+			model.addAttribute("entry", entry);
+			model.addAttribute("entries", guestbook.findAll());
+
+			for(Long key : editMode.keySet()){
+				if(!editMode.get(key)) continue;
+
+				if(guestbook.findById(key).isPresent()){
+					model.addAttribute("editEntryForm" + entry.get().getId(), guestbook.findById(key).get().toGuestbookForm());
+				}else{
+					editMode.remove(key);
+				}
+			}
+
+			model.addAttribute("showComments", showComments);
+			model.addAttribute("editMode", editMode);
+
+			return "redirect:/guestbook";
+
+		}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	}
+
+	@HxRequest
+	@PostMapping(path = "/guestbook/showComments{entry}")
+	HtmxResponse showEntryComments(@PathVariable Optional<GuestbookEntry> entry, Model model) {
+		System.out.println(entry.get().getId());
+		showComments.put(entry.get().getId(), !showCommntsOf(entry.get().getId()));
+
+		//TODO: add deafault attrs
+
+		return new HtmxResponse().addTemplate("guestbook :: entries").addTrigger("reload");
+	}
+
+
 
 	/**
 	 * Handles AJAX requests to delete {@link GuestbookEntry}s. Otherwise, this method is similar to
@@ -187,8 +227,14 @@ class GuestbookController {
 		return entry.map(it -> {
 
 			guestbook.delete(it);
+			if(showComments.containsKey(it.getId())) showComments.remove(it.getId());
+			if(editMode.containsKey(it.getId())) editMode.remove(it.getId());
 
+			model.addAttribute("index", guestbook.count());
+			model.addAttribute("entry", entry);
 			model.addAttribute("entries", guestbook.findAll());
+			model.addAttribute("showComments", showComments);
+			model.addAttribute("editMode", editMode);
 
 			return new HtmxResponse()
 					.addTemplate("guestbook :: entries");

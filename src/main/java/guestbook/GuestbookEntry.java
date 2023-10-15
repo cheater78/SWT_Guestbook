@@ -25,6 +25,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.Assert;
 
@@ -39,7 +40,7 @@ import org.springframework.util.Assert;
 class GuestbookEntry {
 
 	private @Id @GeneratedValue Long id;
-	private Long parent;
+	private @NotNull Long parent;
 	private @NotBlank String name;
 	private @NotBlank String email;
 	private @NotBlank String text;
@@ -111,6 +112,7 @@ class GuestbookEntry {
 		return new GuestbookEntry(name, email, text, color, editable, show, parent);
 	}
 
+	/*
 	public void replace(GuestbookEntry entry){
 		this.name = entry.getName();
 		this.email = entry.getEmail();
@@ -120,11 +122,17 @@ class GuestbookEntry {
 		this.editable = entry.isEditable();
 		this.show = entry.isVisible();
 
-		this.parent = entry.getParentID();
+		this.parent = entry.getParent();
 	}
 
+	 */
+
 	public Long getId() { return id; }
-	public Long getParentID() { return parent; }
+
+	public Boolean hasParent() { if(parent == null) parent = (long) -1; return parent != (long)-1; }
+
+	public Long getParent() { return parent; }
+	public void setParent(Long parent) { this.parent = parent; }
 
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
@@ -146,6 +154,10 @@ class GuestbookEntry {
 
 	public boolean isVisible() { return show; }
 	public void setVisible(boolean show) { this.show = show; }
+
+	public GuestbookForm toGuestbookForm(){
+		return new GuestbookForm(name, email, text, editable, show, Optional.ofNullable(parent));
+	}
 
 	public String toString(){
 		String out = "  GuestBookEntry:" + "\n    ";

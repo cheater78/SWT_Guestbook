@@ -58,6 +58,8 @@ class GuestbookForm {
 		this.email = email;
 		this.text = text;
 		this.date = LocalDateTime.now();
+		this.color = "#e0b689";
+
 
 		if(editable == null) editable = true;
 		if(show == null) show = true;

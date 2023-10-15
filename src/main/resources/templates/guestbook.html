@@ -1,5 +1,5 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:hx="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<script th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
@@ -21,48 +21,106 @@
 
 		<div id="entries" class="mx-auto">
 			<div th:each="entry, it : ${entries}" th:with="index = ${it.count}" th:fragment="entries">
-				<div class="card" th:fragment="entry" th:id="entry+${entry.id}">
-					<div class="card-header" th:style="background+':'+${entry.color}">
-						<form th:method="delete" th:action="@{/guestbook/remove{id}(id=${entry.id})}" th:attr="data-entry-id=${entry.id}">
-							<button th:title="#{guestbook.form.delete}" class="btn btn-sm float-right" hx:delete="@{/guestbook/remove{id}(id=${entry.id})}" hx:target="'#entries'">
-								<span class="fas fa-times"></span>
-							</button>
-						</form>
-						<h4 th:text="${index} + '. ' + ${entry.name}" class="card-title" style="color: black">empty</h4>
-					</div>
-					<div class="card-body" style="background: #f5e4d0">
-						<blockquote class="entrytext" th:text="${entry.text}"></blockquote>
-					</div>
-					<div class="card-footer" style="background: #fce1c2">
-						<footer class="grid2" style="grid-template-columns: 50% 30% 20%; ">
-							<div>
-								<a style="text-decoration: none; color: black" class="date" th:text="${#temporals.format(entry.date, 'dd. MMMM yyyy - HH:mm')} + ' - '"></a>
-								<a th:href="'mailto:' + ${entry.email}" th:text="${entry.email}"></a>
-								<br>
-								<a th:href="@{/guestbook/showComments{id}(id=${entry.id})}"><i class="arrow down"></i></a>
-							</div>
-							<div class="rate form-group">
-								<input type="radio" id="star5" name="rate" value="5" th:href="@{/guestbook/rate5{id}(id=${entry.id})}"/>
-								<label for="star5" title="5 stars">5 stars</label>
-								<input type="radio" id="star4" name="rate" value="4" th:href="@{/guestbook/rate4{id}(id=${entry.id})}"/>
-								<label for="star4" title="4 stars">4 stars</label>
-								<input type="radio" id="star3" name="rate" value="3" th:href="@{/guestbook/rate3{id}(id=${entry.id})}"/>
-								<label for="star3" title="3 stars">3 stars</label>
-								<input type="radio" id="star2" name="rate" value="2" th:href="@{/guestbook/rate2{id}(id=${entry.id})}"/>
-								<label for="star2" title="2 stars">2 stars</label>
-								<input type="radio" id="star1" name="rate" value="1" th:href="@{/guestbook/rate1{id}(id=${entry.id})}"/>
-								<label for="star1" title="1 star">1 star</label>
-							</div>
-							<form class="round grid-item" style="background: #dec4a6; horiz-align: right; vertical-align: center" th:method="edit" th:action="@{/guestbook/edit{id}(id=${entry.id})}" th:attr="data-entry-id=${entry.id}">
-								<button style="float: right" class="btn btn-sm" th:title="#{guestbook.form.edit}" th:text="#{guestbook.form.edit}" hx:post="@{/guestbook/edit{id}(id=${entry.id})}" hx:target="'#entries'">empty</button>
+				<div class="card" th:if="${entry != null && entry.hasParent() == false}" th:fragment="entry" th:id="entry+${entry.id}" _="on reload me.reset()">
+					<div th:if="${editMode != null && editMode.containsKey(entry.getId()) && !editMode.get(entry.getId())}">
+						<div class="card-header" th:style="background+':'+${entry.color}">
+							<form th:method="delete" th:action="@{/guestbook/remove{id}(id=${entry.id})}" th:attr="data-entry-id=${entry.id}">
+								<button th:title="#{guestbook.form.delete}" class="btn btn-sm float-right" hx:delete="@{/guestbook/remove{id}(id=${entry.id})}" hx:target="'#entries'">
+									<span class="fas fa-times"></span>
+								</button>
 							</form>
-						</footer>
+							<h4 th:text="${index} + '. ' + ${entry.name}" class="card-title" style="color: black">empty</h4>
+						</div>
+						<div class="card-body" style="background: #f5e4d0">
+							<blockquote class="entrytext" th:text="${entry.text}"></blockquote>
+						</div>
+						<div class="card-footer" style="background: #fce1c2">
+							<footer class="grid2" style="grid-template-columns: 50% 30% 20%; ">
+								<div>
+									<a style="text-decoration: none; color: black" class="date" th:text="${#temporals.format(entry.date, 'dd. MMMM yyyy - HH:mm')} + ' - '"></a>
+									<a th:href="'mailto:' + ${entry.email}" th:text="${entry.email}"></a>
+									<br>
+									<button hx:post="@{/guestbook/showComments{id}(id=${entry.id})}" th:text="nothing"></button>
+									<u class="arrow down"></u>
+								</div>
+								<div class="rate form-group">
+									<input type="radio" id="star5" name="rate" value="5" th:href="@{/guestbook/rate5{id}(id=${entry.id})}"/>
+									<label for="star5" title="5 stars">5 stars</label>
+									<input type="radio" id="star4" name="rate" value="4" th:href="@{/guestbook/rate4{id}(id=${entry.id})}"/>
+									<label for="star4" title="4 stars">4 stars</label>
+									<input type="radio" id="star3" name="rate" value="3" th:href="@{/guestbook/rate3{id}(id=${entry.id})}"/>
+									<label for="star3" title="3 stars">3 stars</label>
+									<input type="radio" id="star2" name="rate" value="2" th:href="@{/guestbook/rate2{id}(id=${entry.id})}"/>
+									<label for="star2" title="2 stars">2 stars</label>
+									<input type="radio" id="star1" name="rate" value="1" th:href="@{/guestbook/rate1{id}(id=${entry.id})}"/>
+									<label for="star1" title="1 star">1 star</label>
+								</div>
+								<div class="round grid-item" style="background: #dec4a6; horiz-align: right; vertical-align: center">
+									<button style="float: right" class="btn btn-sm" th:title="#{guestbook.form.edit}" th:text="#{guestbook.form.edit}" hx:post="@{/guestbook/edit{id}(id=${entry.id})}">empty</button>
+								</div>
+							</footer>
+						</div>
+					</div>
+					<div th:if="${editMode != null && editMode.containsKey(entry.getId()) && editMode.get(entry.getId())}">
+						<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${ editEntryForm+${entry.getId()} }">
+							<div class="form-group">
+								<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
+								<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />
+								<div th:if="${#fields.hasErrors('name')}" class="invalid-feedback" th:text="#{guestbook.form.name.required}">empty</div>
+							</div>
+							<div class="form-group">
+								<label for="email" th:text="#{guestbook.form.email}">E-Mail</label><br />
+								<input class="form-control" type="text" th:field="*{email}" th:errorclass="is-invalid" required="required" />
+								<div th:if="${#fields.hasErrors('email')}" class="invalid-feedback" th:text="#{guestbook.form.email.required}">empty</div>
+							</div>
+							<div class="form-group">
+								<label for="text" th:text="#{guestbook.form.text}">Text</label><br />
+								<textarea th:field="*{text}" th:errorclass="is-invalid" class="form-control" required="required"></textarea>
+								<div th:if="${#fields.hasErrors('text')}" class="invalid-feedback" th:text="#{guestbook.form.text.required}">empty</div>
+							</div>
+							<div style="background: #dec4a6; padding: 1em;" class="grid2 round">
+								<div class="grid-item" >
+									<div class="grid2" style="background: white; border-radius: .4em;">
+										<div class="grid-item form-group" style="align-content: start; flex-direction: row; padding: .2em">
+											<label for="color" style="padding: .3em">Banner Color</label>
+											<input type="color" style="padding: .3em" th:value="${color}" th:field="*{color}">
+										</div>
+										<div class="grid-item form-group" style="align-content: start; flex-direction: row">
+											<label for="editable" style="padding: .3em" >Editable</label>
+											<input type ="checkbox" style="padding: .3em" th:checked="${editable}" th:field="*{editable}" th:errorclass="is-invalid">
+											<label for="show" style="padding: .3em">Show</label>
+											<input type="checkbox" style="padding: .3em" th:checked="${show}" th:field="*{show}" th:errorclass="is-invalid">
+										</div>
+									</div>
+								</div>
+								<div class="grid-item">
+									<input style="align-self: end; vertical-align: bottom" type="submit" class="btn btn-secondary" th:value="#{guestbook.form.submit}" />
+								</div>
+							</div>
+						</form>
+					</div>
+					<div id="commenSection" th:if="${showComments.containsKey(entry.getId()) && showComments.get(entry.getId())}" class="card">
+						<div class="card-header">
+							<div>
+								<h6 th:text="#{guestbook.entry.CommentHeadline}">empty</h6>
+							</div>
+							<form method="post" role="form" class="gb-form card" id="commentForm" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${gbEntryForm}">
+
+								<input style="align-self: end; vertical-align: bottom" type="submit" class="btn btn-secondary" th:value="#{guestbook.form.submit}" />
+							</form>
+							<div th:each="comment, cit : ${entries}" th:with="cindex = ${it.count}">
+								<div th:if="${comment.getParent() == entry.getId()}">
+									<a th:text="${entry.name}" style="color: black">empty</a>
+								</div>
+							</div>
+						</div>
+
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" id="form" hx:post="@{/guestbook}" hx-target="#entries" hx-swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${gbEntryForm}">
+		<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" id="form" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${gbEntryForm}">
 			<div class="form-group">
 				<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
 				<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />
