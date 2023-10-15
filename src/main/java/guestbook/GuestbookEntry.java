@@ -149,14 +149,16 @@ class GuestbookEntry {
 	public String getText() { return text; }
 	public void setText(String text) { this.text = text; }
 
-	public boolean isEditable() { return editable; }
+	public boolean getEditable() { return editable; }
 	public void setEditable(boolean editable) { this.editable = editable; }
 
-	public boolean isVisible() { return show; }
-	public void setVisible(boolean show) { this.show = show; }
+	public boolean getShow() { return show; }
+	public void setShow(boolean show) { this.show = show; }
 
 	public GuestbookForm toGuestbookForm(){
-		return new GuestbookForm(name, email, text, editable, show, Optional.ofNullable(parent));
+		GuestbookForm form = new GuestbookForm(name, email, text, editable, show, Optional.ofNullable(parent));
+		form.setColor(color);
+		return form;
 	}
 
 	public String toString(){

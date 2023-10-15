@@ -21,8 +21,8 @@
 
 		<div id="entries" class="mx-auto">
 			<div th:each="entry, it : ${entries}" th:with="index = ${it.count}" th:fragment="entries">
-				<div class="card" th:if="${entry != null && entry.hasParent() == false}" th:fragment="entry" th:id="entry+${entry.id}" _="on reload me.reset()">
-					<div th:if="${editMode != null && editMode.containsKey(entry.getId()) && !editMode.get(entry.getId())}">
+				<div class="card" th:if="${entry != null && entry.hasParent() == false && entry.getShow()}" th:fragment="entry" th:id="entry+${entry.id}" _="on reload me.reset()">
+					<div th:if="${editMode != entry.getId()}">
 						<div class="card-header" th:style="background+':'+${entry.color}">
 							<form th:method="delete" th:action="@{/guestbook/remove{id}(id=${entry.id})}" th:attr="data-entry-id=${entry.id}">
 								<button th:title="#{guestbook.form.delete}" class="btn btn-sm float-right" hx:delete="@{/guestbook/remove{id}(id=${entry.id})}" hx:target="'#entries'">
@@ -40,8 +40,7 @@
 									<a style="text-decoration: none; color: black" class="date" th:text="${#temporals.format(entry.date, 'dd. MMMM yyyy - HH:mm')} + ' - '"></a>
 									<a th:href="'mailto:' + ${entry.email}" th:text="${entry.email}"></a>
 									<br>
-									<button hx:post="@{/guestbook/showComments{id}(id=${entry.id})}" th:text="nothing"></button>
-									<u class="arrow down"></u>
+									<button hx:post="@{/guestbook/showComments{id}(id=${entry.id})}" hx:target="'#entries'" hx:swap="innerHTML" class="arrow down" style="background: #fce1c2" > </button>
 								</div>
 								<div class="rate form-group">
 									<input type="radio" id="star5" name="rate" value="5" th:href="@{/guestbook/rate5{id}(id=${entry.id})}"/>
@@ -55,14 +54,14 @@
 									<input type="radio" id="star1" name="rate" value="1" th:href="@{/guestbook/rate1{id}(id=${entry.id})}"/>
 									<label for="star1" title="1 star">1 star</label>
 								</div>
-								<div class="round grid-item" style="background: #dec4a6; horiz-align: right; vertical-align: center">
-									<button style="float: right" class="btn btn-sm" th:title="#{guestbook.form.edit}" th:text="#{guestbook.form.edit}" hx:post="@{/guestbook/edit{id}(id=${entry.id})}">empty</button>
+								<div th:if="${entry.getEditable()}" class="round grid-item" style="background: #dec4a6; horiz-align: right; vertical-align: center">
+									<button style="float: right" class="btn btn-sm" th:title="#{guestbook.form.edit}" th:text="#{guestbook.form.edit}" hx:post="@{/guestbook/edit{id}(id=${entry.id})}" hx:target="'#entries'" hx:swap="innerHTML">empty</button>
 								</div>
 							</footer>
 						</div>
 					</div>
-					<div th:if="${editMode != null && editMode.containsKey(entry.getId()) && editMode.get(entry.getId())}">
-						<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${ editEntryForm+${entry.getId()} }">
+					<div th:if="${editMode != -1 && editMode == entry.getId()}">
+						<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" hx:post="@{/guestbook/editSubmit{id}(id=${entry.id})}" hx:target="'#entries'" hx:swap="innerHTML" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${editEntryForm}">
 							<div class="form-group">
 								<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
 								<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />
@@ -104,13 +103,120 @@
 							<div>
 								<h6 th:text="#{guestbook.entry.CommentHeadline}">empty</h6>
 							</div>
-							<form method="post" role="form" class="gb-form card" id="commentForm" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${gbEntryForm}">
-
-								<input style="align-self: end; vertical-align: bottom" type="submit" class="btn btn-secondary" th:value="#{guestbook.form.submit}" />
+							<form method="post" role="form" class="gb-form card" id="commentForm" hx:post="@{/guestbook/addComment{id}(id=${entry.id})}" hx:target="'#entries'" hx:swap="innerHTML" th:object="${gbEntryForm}">
+								<div class="form-group">
+									<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
+									<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />
+									<div th:if="${#fields.hasErrors('name')}" class="invalid-feedback" th:text="#{guestbook.form.name.required}">empty</div>
+								</div>
+								<div class="form-group">
+									<label for="email" th:text="#{guestbook.form.email}">E-Mail</label><br />
+									<input class="form-control" type="text" th:field="*{email}" th:errorclass="is-invalid" required="required" />
+									<div th:if="${#fields.hasErrors('email')}" class="invalid-feedback" th:text="#{guestbook.form.email.required}">empty</div>
+								</div>
+								<div class="form-group">
+									<label for="text" th:text="#{guestbook.form.text}">Text</label><br />
+									<textarea th:field="*{text}" th:errorclass="is-invalid" class="form-control" required="required"></textarea>
+									<div th:if="${#fields.hasErrors('text')}" class="invalid-feedback" th:text="#{guestbook.form.text.required}">empty</div>
+								</div>
+								<div style="background: #dec4a6; padding: 1em;" class="grid2 round">
+									<div class="grid-item" >
+										<div class="grid2" style="background: white; border-radius: .4em;">
+											<div class="grid-item form-group" style="align-content: start; flex-direction: row; padding: .2em">
+												<label for="color" style="padding: .3em">Banner Color</label>
+												<input type="color" style="padding: .3em" th:value="${color}" th:field="*{color}">
+											</div>
+											<div class="grid-item form-group" style="align-content: start; flex-direction: row">
+												<label for="editable" style="padding: .3em" >Editable</label>
+												<input type ="checkbox" style="padding: .3em" th:checked="${editable}" th:field="*{editable}" th:errorclass="is-invalid">
+												<label for="show" style="padding: .3em">Show</label>
+												<input type="checkbox" style="padding: .3em" th:checked="${show}" th:field="*{show}" th:errorclass="is-invalid">
+											</div>
+										</div>
+									</div>
+									<div class="grid-item">
+										<input style="align-self: end; vertical-align: bottom" type="submit" class="btn btn-secondary" th:value="#{guestbook.form.submit}" />
+									</div>
+								</div>
 							</form>
-							<div th:each="comment, cit : ${entries}" th:with="cindex = ${it.count}">
-								<div th:if="${comment.getParent() == entry.getId()}">
-									<a th:text="${entry.name}" style="color: black">empty</a>
+							<div th:each="comment, cit : ${entries}" th:with="cindex = ${cit.count}">
+								<div class="card" th:if="${comment != null && comment.hasParent() == true && comment.getParent() == entry.getId() && comment.getShow()}" th:fragment="entry" th:id="comment+${comment.id}" _="on reload me.reset()">
+
+									<div th:if="${editMode != comment.getId()}">
+										<div class="card-header" th:style="background+':'+${comment.getColor()}">
+											<form th:method="delete" th:action="@{/guestbook/remove{id}(id=${comment.id})}" th:attr="data-entry-id=${comment.id}">
+												<button th:title="#{guestbook.form.delete}" class="btn btn-sm float-right" hx:delete="@{/guestbook/remove{id}(id=${comment.id})}" hx:target="'#entries'">
+													<span class="fas fa-times"></span>
+												</button>
+											</form>
+											<h4 th:text="${comment.name}" class="card-title" style="color: black">empty</h4>
+										</div>
+										<div class="card-body" style="background: #f5e4d0">
+											<blockquote class="entrytext" th:text="${comment.text}"></blockquote>
+										</div>
+										<div class="card-footer" style="background: #fce1c2">
+											<footer class="grid2" style="grid-template-columns: 50% 30% 20%; ">
+												<div>
+													<a style="text-decoration: none; color: black" class="date" th:text="${#temporals.format(comment.date, 'dd. MMMM yyyy - HH:mm')} + ' - '"></a>
+													<a th:href="'mailto:' + ${comment.email}" th:text="${comment.email}"></a>
+												</div>
+												<div class="rate form-group">
+													<input type="radio" id="star5" name="rate" value="5" th:href="@{/guestbook/rate5{id}(id=${comment.id})}"/>
+													<label for="star5" title="5 stars">5 stars</label>
+													<input type="radio" id="star4" name="rate" value="4" th:href="@{/guestbook/rate4{id}(id=${comment.id})}"/>
+													<label for="star4" title="4 stars">4 stars</label>
+													<input type="radio" id="star3" name="rate" value="3" th:href="@{/guestbook/rate3{id}(id=${comment.id})}"/>
+													<label for="star3" title="3 stars">3 stars</label>
+													<input type="radio" id="star2" name="rate" value="2" th:href="@{/guestbook/rate2{id}(id=${comment.id})}"/>
+													<label for="star2" title="2 stars">2 stars</label>
+													<input type="radio" id="star1" name="rate" value="1" th:href="@{/guestbook/rate1{id}(id=${comment.id})}"/>
+													<label for="star1" title="1 star">1 star</label>
+												</div>
+												<div th:if="${comment.getEditable()}" class="round grid-item" style="background: #dec4a6; horiz-align: right; vertical-align: center">
+													<button style="float: right" class="btn btn-sm" th:title="#{guestbook.form.edit}" th:text="#{guestbook.form.edit}" hx:post="@{/guestbook/edit{id}(id=${comment.id})}" hx:target="'#entries'" hx:swap="innerHTML">empty</button>
+												</div>
+											</footer>
+										</div>
+									</div>
+									<div th:if="${editMode != -1 && editMode == comment.getId()}">
+										<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" hx:post="@{/guestbook/editSubmit{id}(id=${comment.id})}" hx:target="'#entries'" hx:swap="innerHTML" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${editEntryForm}">
+											<div class="form-group">
+												<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
+												<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />
+												<div th:if="${#fields.hasErrors('name')}" class="invalid-feedback" th:text="#{guestbook.form.name.required}">empty</div>
+											</div>
+											<div class="form-group">
+												<label for="email" th:text="#{guestbook.form.email}">E-Mail</label><br />
+												<input class="form-control" type="text" th:field="*{email}" th:errorclass="is-invalid" required="required" />
+												<div th:if="${#fields.hasErrors('email')}" class="invalid-feedback" th:text="#{guestbook.form.email.required}">empty</div>
+											</div>
+											<div class="form-group">
+												<label for="text" th:text="#{guestbook.form.text}">Text</label><br />
+												<textarea th:field="*{text}" th:errorclass="is-invalid" class="form-control" required="required"></textarea>
+												<div th:if="${#fields.hasErrors('text')}" class="invalid-feedback" th:text="#{guestbook.form.text.required}">empty</div>
+											</div>
+											<div style="background: #dec4a6; padding: 1em;" class="grid2 round">
+												<div class="grid-item" >
+													<div class="grid2" style="background: white; border-radius: .4em;">
+														<div class="grid-item form-group" style="align-content: start; flex-direction: row; padding: .2em">
+															<label for="color" style="padding: .3em">Banner Color</label>
+															<input type="color" style="padding: .3em" th:value="${color}" th:field="*{color}">
+														</div>
+														<div class="grid-item form-group" style="align-content: start; flex-direction: row">
+															<label for="editable" style="padding: .3em" >Editable</label>
+															<input type ="checkbox" style="padding: .3em" th:checked="${editable}" th:field="*{editable}" th:errorclass="is-invalid">
+															<label for="show" style="padding: .3em">Show</label>
+															<input type="checkbox" style="padding: .3em" th:checked="${show}" th:field="*{show}" th:errorclass="is-invalid">
+														</div>
+													</div>
+												</div>
+												<div class="grid-item">
+													<input style="align-self: end; vertical-align: bottom" type="submit" class="btn btn-secondary" th:value="#{guestbook.form.submit}" />
+												</div>
+											</div>
+										</form>
+									</div>
+
 								</div>
 							</div>
 						</div>
@@ -120,7 +226,7 @@
 			</div>
 		</div>
 
-		<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" id="form" hx:post="@{/guestbook}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:action="@{/guestbook}" th:object="${gbEntryForm}">
+		<form style="background: #dec4a6; padding: .5em" method="post" role="form" class="gb-form card" id="form" hx:post="@{/addEntry}" hx:target="'#entries'" hx:swap="beforeend" _="on entryAdded me.reset()" th:object="${gbEntryForm}">
 			<div class="form-group">
 				<label for="name" th:text="#{guestbook.form.name}">Name</label><br />
 				<input class="form-control" type="text" th:field="*{name}" th:errorclass="is-invalid" required="required" />

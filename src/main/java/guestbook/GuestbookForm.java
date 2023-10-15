@@ -95,7 +95,16 @@ class GuestbookForm {
 	public Boolean getShow() { return show; }
 	public void setShow(Boolean show) { if(show == null) show = true; this.show = show; }
 
-
+	void writeToEntry(GuestbookEntry entry){
+		entry.setName(name);
+		entry.setEmail(email);
+		entry.setText(text);
+		entry.setColor(color);
+		entry.setDate(date);
+		entry.setEditable(editable);
+		entry.setShow(show);
+		entry.setParent(parent.orElseGet(() -> (long) -1));
+	}
 
 	GuestbookEntry toNewEntry() { return new GuestbookEntry(name, email, text, color, editable, show, parent.orElseGet(() -> (long) -1)); }
 }
